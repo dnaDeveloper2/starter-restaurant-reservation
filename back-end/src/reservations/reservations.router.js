@@ -4,9 +4,17 @@
  * @type {Router}
  */
 
-const router = require("express").Router();
+const express = require("express");
 const controller = require("./reservations.controller");
+const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
-router.route("/").get(controller.list);
+const router = express.Router();
+
+router
+  .route("/")
+  .get(asyncErrorBoundary(controller.list))
+  .post(asyncErrorBoundary(controller.create));
 
 module.exports = router;
+
+
