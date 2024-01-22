@@ -1,0 +1,64 @@
+/* Default styles for mobile */
+.reservation-form-container {
+  max-width: 200px;
+  margin: 0px;
+}
+
+.reservation-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Align items to the right */
+}
+
+.reservation-form label {
+  margin-bottom: 5px;
+}
+
+.reservation-form input,
+.reservation-form select {
+  
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: left; 
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.submit-button {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancel-button {
+  background-color: #ccc;
+  color: black;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Media query for desktop mode */
+@media (min-width: 768px) {
+  .reservation-form-container {
+    margin:10px; /* Center the form in desktop mode */
+  }
+
+  .reservation-form {
+    align-items: flex-start; /* Align items to the left in desktop mode */
+  }
+}
+
+.reservation-form input,
+.reservation-form select {
+  display: block;
+  direction: ltr;
+}

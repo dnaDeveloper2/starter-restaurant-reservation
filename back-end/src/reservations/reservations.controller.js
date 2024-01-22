@@ -9,6 +9,50 @@ async function list(req, res) {
   res.json({ data });
 }
 
+async function seatReservation(req, res, next) {
+  const { reservation_id } = req.params;
+  const { table_id } = req.body.data;
+
+  try {
+    // Check if the reservation exists
+    const reservation = await knex("reservations")
+      .where({ reservation_id })
+      .first();
+
+    if (!reservation) {
+      return res.status(404).json({ error: "Reservation not found." });
+    }
+
+    // Check if the table exists
+    const table = await knex("tables")
+      .where({ table_id })
+      .first();
+
+    if (!table) {
+      return res.status(404).json({ error: "Table not found." });
+    }
+
+    // Check if the table is already occupied by another reservation
+    const occupiedTable = await knex("tables")
+      .where({ reservation_id: reservation_id })
+      .first();
+
+    if (occupiedTable) {
+      return res.status(400).json({ error: "Table is already occupied." });
+    }
+
+    // Update the reservation with the assigned table_id
+    await knex("reservations")
+      .where({ reservation_id })
+      .update({ table_id });
+
+    res.sendStatus(204);
+  } catch (error) {
+    next(error);
+  }
+}
+
+
 async function create(req, res) {
   const {
     first_name,
@@ -18,6 +62,16 @@ async function create(req, res) {
     reservation_time,
     people,
   } = req.body;
+
+  // Add validation for future working dates
+  const today = new Date();
+  const reservationDate = new Date(reservation_date);
+  
+  console.log("reservation-------", reservationDate.getDay())
+  if (reservationDate <= today || reservationDate.getDay() === 2 /* Tuesday */) {
+   
+    return res.status(400).json({ error: "Invalid reservation date." });
+  }
 
   const errors = [];
 
@@ -61,5 +115,6 @@ async function create(req, res) {
 
 module.exports = {
   list:asyncErrorBoundary(list),
-  create: asyncErrorBoundary(create)
+  create: asyncErrorBoundary(create),
+  seatReservation: asyncErrorBoundary(seatReservation),
 };

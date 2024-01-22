@@ -2,3 +2,30 @@
   background-color: #393a44;
   min-width: 200px;
 }
+
+.navbar-nav {
+  flex-direction: column; /* Stack links vertically in mobile view */
+  align-items: flex-end; /* Align links to the right in mobile view */
+}
+
+.navbar-nav .nav-item {
+  margin-bottom: 10px; /* Add space between each link in mobile view */
+}
+
+
+/* Media query for mobile view */
+@media (max-width: 767px) {
+
+
+.navbar-nav {
+  display: flex;
+  justify-content: space-around;
+  flex-direction: row;
+  margin: 5px;
+  align-items: flex-start;
+}
+
+.nav-item {
+  padding: 10px; /* Add margin around each link in mobile view */
+}
+}

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import ErrorAlert from "../layout/ErrorAlert";
+import "./ReservationForm.css"; // Import your CSS file
 
 function ReservationForm() {
   const history = useHistory();
@@ -26,6 +27,27 @@ function ReservationForm() {
 
     try {
       const base_url = "http://localhost:5001";
+
+    const selectedDateTime = new Date(
+      `${formData.reservation_date}T${formData.reservation_time}:00`
+    );
+    
+    const today = new Date();
+    console.log(selectedDateTime,"#####", today)
+
+    if (
+      selectedDateTime < today ||
+      selectedDateTime.getDay() === 2 /* Tuesday */ ||
+      selectedDateTime.getTime() < today.getTime() ||
+      (selectedDateTime.getHours() <= 10 && selectedDateTime.getMinutes() < 30) ||
+      (selectedDateTime.getHours() >= 21 && selectedDateTime.getMinutes() > 30) 
+    
+    ) {
+      throw new Error(
+        "Invalid reservation date or time. Reservations are not allowed on Tuesdays, in the past, before 10:30 AM, or after 9:30 PM."
+      );
+    }
+
       const formattedDate = new Date(formData.reservation_date)
         .toISOString()
         .split("T")[0];
@@ -45,29 +67,29 @@ function ReservationForm() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message);
+        throw new Error(
+          errorData.errors
+            ? errorData.errors.join(" ")
+            : "Invalid data. Unable to create reservation."
+        );
       }
 
-      const reservationDate = new Date(formData.reservation_date);
-      const formattedDateForRedirect = reservationDate
+      const reservationDateForRedirect = new Date(formData.reservation_date)
         .toISOString()
         .split("T")[0];
-      history.push(`/dashboard?date=${formattedDateForRedirect}`);
+      history.push(`/dashboard?date=${reservationDateForRedirect}`);
     } catch (error) {
+      
       setError(error.message);
+      console.log(error);
     }
   };
 
   return (
-    <div>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          maxWidth: "400px",
-          margin: "auto",
-        }}
+    <div className="reservation-form-container">
+    <form
+      onSubmit={handleSubmit}
+      className="reservation-form"
       >
         <div style={{ marginBottom: "10px" }}>
           <label htmlFor="first_name">First Name:</label>
@@ -142,11 +164,12 @@ function ReservationForm() {
           />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <button type="submit">Submit</button>
-          <button type="button" onClick={() => history.goBack()}>
+        <div className="form-actions">
+          <button type="submit" className="submit-button">Submit</button>
+          <button type="button" onClick={() => history.goBack()} className="cancel-button">
             Cancel
           </button>
+        
         </div>
       </form>
       <ErrorAlert error={error} />

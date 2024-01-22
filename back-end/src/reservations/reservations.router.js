@@ -15,6 +15,10 @@ router
   .get(asyncErrorBoundary(controller.list))
   .post(asyncErrorBoundary(controller.create));
 
+
+  router.route("/:reservation_id/seat").put(asyncErrorBoundary(controller.seatReservation));
+
+
 module.exports = router;
 
 

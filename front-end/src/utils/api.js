@@ -67,3 +67,28 @@ export async function listReservations(params, signal) {
     .then(formatReservationDate)
     .then(formatReservationTime);
 }
+
+export async function listTables() {
+  const response = await fetch(`${API_BASE_URL}/tables`);
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to fetch tables");
+  }
+  const data = await response.json();
+  return data.data; // Make sure to access the correct property containing the array
+}
+
+export async function seatReservation(reservationId, selectedTable) {
+  const response = await fetch(`${API_BASE_URL}/tables/${selectedTable}/seat/`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ data: { reservation_id: reservationId }  }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error.message || `Failed to seat reservation: ${errorData.error}`);
+  }
+}
