@@ -5,19 +5,18 @@
  */
 
 const express = require("express");
+const router = express.Router();
 const controller = require("./reservations.controller");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
-const router = express.Router();
-
-router
-  .route("/")
-  .get(asyncErrorBoundary(controller.list))
-  .post(asyncErrorBoundary(controller.create));
 
 
   router.route("/:reservation_id/seat").put(asyncErrorBoundary(controller.seatReservation));
-
+  router.route("/search").get(controller.search);
+  router
+  .route("/")
+  .get(asyncErrorBoundary(controller.list))
+  .post(asyncErrorBoundary(controller.create));
 
 module.exports = router;
 

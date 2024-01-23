@@ -27,13 +27,18 @@ function ReservationForm() {
 
     try {
       const base_url = "http://localhost:5001";
-
-    const selectedDateTime = new Date(
+      const phoneNumberRegex = /^\d{3}-\d{3}-\d{4}$/;
+      const selectedDateTime = new Date(
       `${formData.reservation_date}T${formData.reservation_time}:00`
     );
     
     const today = new Date();
     console.log(selectedDateTime,"#####", today)
+
+    if (!phoneNumberRegex.test(formData.mobile_number)) {
+      setError("Phone number must be in the format 800-555-1212.");
+      return; // Prevent form submission if validation fails
+    }
 
     if (
       selectedDateTime < today ||

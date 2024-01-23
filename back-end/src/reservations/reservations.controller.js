@@ -1,6 +1,18 @@
 const knex = require("../db/connection");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
+async function search(req, res) {
+  const { mobile_number } = req.query;
+  const data = await knex("reservations")
+    .whereRaw(
+      "translate(mobile_number, '() -', '') like ?",
+      `%${mobile_number.replace(/\D/g, "")}%`
+    )
+    .orderBy("reservation_date");
+
+  res.json({ data });
+}
+
 async function list(req, res) {
   const { date } = req.query;
   const data = await knex("reservations")
@@ -32,19 +44,20 @@ async function seatReservation(req, res, next) {
       return res.status(404).json({ error: "Table not found." });
     }
 
-    // Check if the table is already occupied by another reservation
-    const occupiedTable = await knex("tables")
-      .where({ reservation_id: reservation_id })
+    // Check if the table is already occupied by another active reservation
+    const activeReservationAtTable = await knex("reservations")
+      .where({ table_id, status: 'booked' })
+      .orWhere({ table_id, status: 'seated' })
       .first();
 
-    if (occupiedTable) {
+    if (activeReservationAtTable) {
       return res.status(400).json({ error: "Table is already occupied." });
     }
 
-    // Update the reservation with the assigned table_id
+    // Update the reservation with the assigned table_id and status to 'seated'
     await knex("reservations")
       .where({ reservation_id })
-      .update({ table_id });
+      .update({ table_id, status: 'seated' });
 
     res.sendStatus(204);
   } catch (error) {
@@ -66,6 +79,11 @@ async function create(req, res) {
   // Add validation for future working dates
   const today = new Date();
   const reservationDate = new Date(reservation_date);
+
+  const phoneNumberRegex = /^\d{3}-\d{3}-\d{4}$/;
+  if (!phoneNumberRegex.test(mobile_number)) {
+    return res.status(400).json({ error: "Phone number must be in the format 800-555-1212." });
+  }
   
   console.log("reservation-------", reservationDate.getDay())
   if (reservationDate <= today || reservationDate.getDay() === 2 /* Tuesday */) {
@@ -117,4 +135,5 @@ module.exports = {
   list:asyncErrorBoundary(list),
   create: asyncErrorBoundary(create),
   seatReservation: asyncErrorBoundary(seatReservation),
+  search: asyncErrorBoundary(search),
 };

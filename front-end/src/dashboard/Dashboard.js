@@ -74,9 +74,8 @@ function Dashboard() {
   };
 
   const getTableStatus = (tableId) => {
-    const table = tables.find((table) => table.table_id === tableId);
-
-    return table && table.reservation_id ? "Occupied" : "Free";
+    const reservationAtTable = reservations.find((reservation) => reservation.table_id === tableId && reservation.status !== 'finished');
+    return reservationAtTable ? "Occupied" : "Free";
   };
 
   return (
@@ -141,15 +140,16 @@ function Dashboard() {
               })}
           </ul>
         </div>
-        {reservations.length > 0 ? (
+         {/* Filter out finished reservations */}
+         {reservations.filter(reservation => reservation.status !== 'finished').length > 0 ? (
           <div className="dashboard-reservations">
             <h2>Reservations</h2>
             <div className="reservations-scrollable">
               <ul>
-                {reservations.map((reservation) => (
+              {reservations
+                  .filter(reservation => reservation.status !== 'finished') // Filter out finished reservations
+                  .map((reservation) => (
                   <li key={reservation.reservation_id}>
-                    <strong>Reservation ID:</strong>{" "}
-                    {reservation.reservation_id}
                     <br />
                     <strong>Name:</strong> {reservation.first_name}{" "}
                     {reservation.last_name}
@@ -166,11 +166,10 @@ function Dashboard() {
                     <br />
                     <strong>Updated At:</strong> {reservation.updated_at}
                     <br />
-                    <a
-                      href={`/reservations/${reservation.reservation_id}/seat`}
-                    >
-                      Seat
-                    </a>
+                 {/* Only show the Seat button for 'booked' reservations */}
+                 {reservation.status === 'booked' && (
+                      <a href={`/reservations/${reservation.reservation_id}/seat`}>Seat</a>
+                    )}
                     <hr />
                   </li>
                 ))}

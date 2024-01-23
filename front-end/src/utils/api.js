@@ -92,3 +92,9 @@ export async function seatReservation(reservationId, selectedTable) {
     throw new Error(errorData.error.message || `Failed to seat reservation: ${errorData.error}`);
   }
 }
+
+export async function searchReservations(mobileNumber) {
+  const url = new URL(`${API_BASE_URL}/reservations/search`);
+  if (mobileNumber) url.searchParams.append("mobile_number", mobileNumber);
+  return await fetchJson(url);
+}

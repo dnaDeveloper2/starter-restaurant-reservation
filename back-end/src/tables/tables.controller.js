@@ -10,16 +10,21 @@ async function finishTable(req, res, next) {
   const { table_id } = req.params;
 
   try {
-    // Check if the table has a reservation assigned (considered occupied)
-    const table = await knex("tables").where({ table_id }).first();
-    if (!table || !table.reservation_id) {
+    // Find the reservation associated with this table
+    const activeReservation = await knex("reservations")
+      .where({ table_id, status: 'seated' }) // We're looking for the reservation that is currently seated at this table
+      .first();
+
+    if (!activeReservation) {
       return res.status(400).json({ error: "Table is not occupied." });
     }
 
-    // Free up the table by removing the reservation assignment
-    await knex("tables").where({ table_id }).update({ reservation_id: null });
+    // Update the reservation status to 'finished'
+    await knex("reservations")
+      .where({ reservation_id: activeReservation.reservation_id })
+      .update({ status: 'finished', table_id: null }); // Also clearing the table_id as the reservation is finished
 
-    res.status(204).json();
+    res.sendStatus(204);
   } catch (error) {
     next(error);
   }
@@ -30,7 +35,6 @@ async function seatTable(req, res, next) {
   const { table_id } = req.params;
 
   try {
-    // Check if the reservation exists
     const reservation = await knex("reservations")
       .where({ reservation_id })
       .first();
@@ -39,7 +43,6 @@ async function seatTable(req, res, next) {
       return res.status(404).json({ error: "Reservation not found." });
     }
 
-    // Check if the table exists
     const table = await knex("tables")
       .where({ table_id })
       .first();
@@ -48,32 +51,29 @@ async function seatTable(req, res, next) {
       return res.status(404).json({ error: "Table not found." });
     }
 
-    // Check if the table is free
-    if (table.reservation_id) {
-      return res.status(400).json({ error: "Table is already occupied." });
-    }
-
-    // Check if the table has sufficient capacity
+    // Check if table has sufficient capacity
     if (table.capacity < reservation.people) {
       return res.status(400).json({ error: "Table does not have sufficient capacity." });
     }
 
-    // Check if the table is already occupied by another reservation
-    const occupiedTable = await knex("tables")
-      .where({ reservation_id: reservation_id })
+    // Check if table is already occupied by checking if there's an active reservation with this table_id
+    const activeReservationAtTable = await knex("reservations")
+      .where({ table_id, status: 'booked' })
+      .orWhere({ table_id, status: 'seated' })
       .first();
 
-    if (occupiedTable) {
+    if (activeReservationAtTable) {
       return res.status(400).json({ error: "Table is already occupied." });
     }
 
-    await knex("tables")
-    .where({ table_id })
-    .update({ reservation_id });
+    // Seat the reservation by updating its status and table_id
+    await knex("reservations")
+      .where({ reservation_id })
+      .update({ status: 'seated', table_id });
 
     res.sendStatus(204);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     next(error);
   }
 }
