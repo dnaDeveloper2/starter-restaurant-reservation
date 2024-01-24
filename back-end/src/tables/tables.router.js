@@ -1,16 +1,9 @@
-const express = require("express");
-const controller = require("./tables.controller");
-const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
-const router = express.Router();
+const router = require('express').Router();
+const controller = require('./tables.controller');
+const asyncErrorBoundary = require('../errors/asyncErrorBoundary');
 
-
-router.route("/:table_id/seat/")
-.put(asyncErrorBoundary(controller.seatTable))
-.delete(controller.finishTable);
-
-router.route("/")
-.get(asyncErrorBoundary(controller.list))
-.post(asyncErrorBoundary(controller.createTable));
-
+router.route('/')
+    .get(asyncErrorBoundary(controller.list))
+    .post(asyncErrorBoundary(controller.createTable));
 
 module.exports = router;
