@@ -18,7 +18,7 @@ app.use(express.json());
 
 app.use("/reservations", reservationsRouter);
 app.use("/tables", tablesRouter);
-app.use('/seat', seatRouter);
+
 
 app.use(notFound);
 app.use(errorHandler);

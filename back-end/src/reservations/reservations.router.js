@@ -1,12 +1,12 @@
 const router = require('express').Router();
 const controller = require('./reservations.controller');
-const asyncErrorBoundary = require('../errors/asyncErrorBoundary');
+// const asyncErrorBoundary = require('../errors/asyncErrorBoundary');
 
 router.route('/:reservation_id')
-    .get(asyncErrorBoundary(controller.read));
+    .get(controller.read);
 
 router.route('/')
-    .get(asyncErrorBoundary(controller.list))
-    .post(asyncErrorBoundary(controller.create));
+    .get(controller.list)
+    .post(controller.create);
 
 module.exports = router;
