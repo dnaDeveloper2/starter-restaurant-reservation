@@ -35,6 +35,11 @@ function ReservationForm() {
     const today = new Date();
     console.log(selectedDateTime,"#####", today)
 
+    if (isNaN(formData.people) || formData.people < 1) {
+      setError("Number of people must be a positive number.");
+      return; // Prevent form submission if validation fails
+    }
+
     if (!phoneNumberRegex.test(formData.mobile_number)) {
       setError("Phone number must be in the format 800-555-1212.");
       return; // Prevent form submission if validation fails
@@ -65,18 +70,18 @@ function ReservationForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...formData,
-          reservation_date: formattedDateTime,
+          data: formData,  // Ensure the reservation details are nested inside a 'data' property
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(
-          errorData.errors
-            ? errorData.errors.join(" ")
-            : "Invalid data. Unable to create reservation."
-        );
+        const errorMessage = errorData.errors
+          ? errorData.errors.join(", ") // Join errors with a comma if it's an array
+          : errorData.error || "There was a problem processing your request. Please check your input and try again.";
+          console.log("Error response from server:", errorData);
+        setError(errorMessage);
+        return; // Prevent further execution if there's an error
       }
 
       const reservationDateForRedirect = new Date(formData.reservation_date)

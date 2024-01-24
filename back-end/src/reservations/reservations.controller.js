@@ -21,6 +21,28 @@ async function list(req, res) {
   res.json({ data });
 }
 
+async function read(req, res, next) {
+  // Convert reservation_id to a number to ensure type consistency.
+  const reservation_id = Number(req.params.reservation_id);
+  console.log(`Fetching reservation with ID: ${reservation_id}`); 
+
+  try {
+    const data = await knex("reservations")
+      .where({ reservation_id })  // Use the number version of reservation_id
+      .first();
+
+    if (!data) {
+      // If no reservation is found, return a 404 status code with an error message.
+      return res.status(404).json({ error: `Reservation with ID ${reservation_id} not found.` });
+    }
+
+    // Return the fetched reservation data
+    return res.status(200).json({ data: data });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function seatReservation(req, res, next) {
   const { reservation_id } = req.params;
   const { table_id } = req.body.data;
@@ -66,7 +88,10 @@ async function seatReservation(req, res, next) {
 }
 
 
-async function create(req, res) {
+async function create(req, res, next) {
+  if (!req.body.data) {
+    return res.status(400).json({ error: "Data is missing." });
+  }
   const {
     first_name,
     last_name,
@@ -74,60 +99,94 @@ async function create(req, res) {
     reservation_date,
     reservation_time,
     people,
-  } = req.body;
-
-  // Add validation for future working dates
-  const today = new Date();
-  const reservationDate = new Date(reservation_date);
-
-  const phoneNumberRegex = /^\d{3}-\d{3}-\d{4}$/;
-  if (!phoneNumberRegex.test(mobile_number)) {
-    return res.status(400).json({ error: "Phone number must be in the format 800-555-1212." });
-  }
-  
-  console.log("reservation-------", reservationDate.getDay())
-  if (reservationDate <= today || reservationDate.getDay() === 2 /* Tuesday */) {
-   
-    return res.status(400).json({ error: "Invalid reservation date." });
-  }
+  } = req.body.data; // Destructure properties from req.body.data
 
   const errors = [];
 
-  // Check for missing data and collect error messages
-  if (!first_name) errors.push("First name is required.");
-  if (!last_name) errors.push("Last name is required.");
-  if (!mobile_number) errors.push("Mobile number is required.");
-  if (!reservation_date) errors.push("Reservation date is required.");
-  if (!reservation_time) errors.push("Reservation time is required.");
-  if (!people) errors.push("Number of people is required.");
+  // Validate required fields are present and not empty
+  if (!first_name || first_name.trim() === "") errors.push("first_name is required.");
+  if (!last_name || last_name.trim() === "") errors.push("last_name is required.");
+  if (!mobile_number || mobile_number.trim() === "") errors.push("mobile_number is required.");
+  if (!reservation_date || reservation_date.trim() === "") errors.push("reservation_date is required.");
+  if (!reservation_time || reservation_time.trim() === "") errors.push("reservation_time is required.");
+  if (!people || isNaN(people) ||typeof people !== 'number' ||Number(people) <= 0) errors.push("people must be a number greater than 0.");
+  
 
-  // If there are errors, return a response with a 400 status code and the collected error messages
-  if (errors.length > 0) {
-    return res.status(400).json({ errors });
+  // Validate phone number format
+  const phoneNumberRegex = /^\d{3}-\d{3}-\d{4}$/;
+  if (!phoneNumberRegex.test(mobile_number)) {
+    errors.push("Phone number must be in the format 800-555-1212.");
   }
 
-    if (first_name.trim() === "" || last_name.trim() === "" || mobile_number.trim() === "" || reservation_date.trim() === "" || reservation_time.trim() === "") {
-      return res.status(400).json({ error: "Empty values are not allowed." });
-    }
+  // Validate reservation_date and reservation_time
+  const reservationDateTime = new Date(`${reservation_date}T${reservation_time}`);
+  const today = new Date();
+  
+  // Check if the reservation is in the future
+  if (reservationDateTime <= today) {
+      errors.push("Invalid reservation_date or reservation_time. Reservation must be in the future.");
+  }
+  if (isNaN(reservationDateTime)){
+    errors.push("Invalid reservation_date or reservation_time.");
+  }
+  
+  // Check if the reservation is on a Tuesday
+  if (reservationDateTime.getDay() === 2) {
+      errors.push("Restaurant is closed on Tuesdays.");
+  }
+  
+  // Check reservation time restrictions
+  const reservationHour = reservationDateTime.getHours();
+  const reservationMinute = reservationDateTime.getMinutes();
+  
+  // Opening time (10:30 AM)
+  const openingHour = 10;
+  const openingMinute = 30;
+  
+  // Closing time (9:30 PM)
+  const closingHour = 21;
+  const closingMinute = 30;
+  
+  if (reservationHour < openingHour || (reservationHour === openingHour && reservationMinute < openingMinute)) {
+      errors.push("Invalid reservation_time. Cannot be before 10:30 AM.");
+  }
+  
+  if (reservationHour > closingHour || (reservationHour === closingHour && reservationMinute > closingMinute)) {
+      errors.push("Invalid reservation_time. Cannot be after 9:30 PM.");
+  }
 
-    if (isNaN(people)) {
-      return res.status(400).json({ error: "Invalid data type for 'people'. Must be a number." });
-    }
-  const reservation = {
-    first_name,
-    last_name,
-    mobile_number,
-    reservation_date,
-    reservation_time,
-    people,
-  };
+  // If there are errors, return a response with a 400 status code and the collected error messages
+  // If there are errors, return a response with a 400 status code and the collected error messages
+  if (errors.length > 0) {
+    // If the test expects error messages as an array
+    
+    return res.status(400).json({ error: errors.join(', ') }) // Return errors as an array
+    
+  }
+  
 
-  const [createdReservation] = await knex("reservations")
-    .insert(reservation)
-    .returning("*");
+  // Proceed with creating the reservation
+  try {
+    const reservation = {
+      first_name,
+      last_name,
+      mobile_number,
+      reservation_date,
+      reservation_time,
+      people: Number(people), // Ensure 'people' is stored as a number
+    };
 
-  res.status(201).json({ data: createdReservation });
+    const [createdReservation] = await knex("reservations")
+      .insert(reservation)
+      .returning("*");
+
+    res.status(201).json({ data: createdReservation });
+  } catch (error) {
+    next(error);  // Handle unexpected errors
+  }
 }
+
+
 
 
 
@@ -136,4 +195,5 @@ module.exports = {
   create: asyncErrorBoundary(create),
   seatReservation: asyncErrorBoundary(seatReservation),
   search: asyncErrorBoundary(search),
+  read: asyncErrorBoundary(read)
 };

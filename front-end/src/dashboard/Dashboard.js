@@ -26,18 +26,26 @@ function Dashboard() {
   };
   
   const finishTable = async (tableId) => {
-    const API_BASE_URL = "http://localhost:5001"
+    const API_BASE_URL = "http://localhost:5001";
     try {
-      
-      // Send DELETE request to free up the table
-      await fetch(`${API_BASE_URL}/tables/${tableId}/seat`, {
-        method: 'DELETE',
-      });
+      // Confirm with the user before finishing the table
+      if (window.confirm("Are you sure you want to free up this table?")) {
+        // Send DELETE request to free up the table
+        const response = await fetch(`${API_BASE_URL}/tables/${tableId}/seat`, {
+          method: 'DELETE',
+        });
   
-      // Refresh the list of tables after finishing the table
-      loadDashboard();
+        if (!response.ok) {
+          // If the response is not OK, throw an error with the response's status text
+          throw new Error(`Error: ${response.statusText}`);
+        }
+  
+        // Refresh the list of tables and reservations after finishing the table
+        loadDashboard();
+      }
     } catch (error) {
       console.error(error.message || 'Failed to finish table');
+      // Optionally, you can set an error state here and display it to the user
     }
   };
 
@@ -74,8 +82,11 @@ function Dashboard() {
   };
 
   const getTableStatus = (tableId) => {
-    const reservationAtTable = reservations.find((reservation) => reservation.table_id === tableId && reservation.status !== 'finished');
-    return reservationAtTable ? "Occupied" : "Free";
+    // Find the table by its ID
+    const table = tables.find((table) => table.table_id === tableId);
+  
+    // Check if the table has a reservation_id associated with it
+    return table && table.reservation_id ? "Occupied" : "Free";
   };
 
   return (

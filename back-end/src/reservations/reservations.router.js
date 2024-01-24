@@ -12,6 +12,7 @@ const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
 
   router.route("/:reservation_id/seat").put(asyncErrorBoundary(controller.seatReservation));
+  router.route("/:reservation_id").get(asyncErrorBoundary(controller.read))
   router.route("/search").get(controller.search);
   router
   .route("/")
