@@ -4,8 +4,10 @@ const controller = require('./reservations.controller');
 router.route('/:reservation_id/status')
     .put(controller.updateReservationStatus);
 
-router.route('/:reservation_id')
-    .get(controller.read);
+    router
+    .route("/:reservation_id")
+    .get(controller.read)
+    .put(controller.update); // Ensure this line is handling PUT requests correctly
 
 router.route('/')
     .get(controller.list)
