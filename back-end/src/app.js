@@ -9,7 +9,7 @@ const errorHandler = require("./errors/errorHandler");
 const notFound = require("./errors/notFound");
 const reservationsRouter = require("./reservations/reservations.router");
 const tablesRouter = require("./tables/tables.router");
-const seatRouter = require("./seat/seat.router")
+
 
 const app = express();
 

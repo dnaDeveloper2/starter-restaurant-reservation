@@ -18,13 +18,16 @@ async function seatTable(table_id, reservation_id) {
         .first();
     
     if (!reservation) throw new Error(`Reservation ${reservation_id} does not exist.`);
+    if (reservation.status === 'seated') {
+        throw new Error(`Reservation ${reservation_id} is already seated.`);
+    }
 
     const table = await knex("tables")
         .select("*")
         .where({ table_id })
         .first();
     
-        if (!reservation) throw new Error(`Reservation ${reservation_id} does not exist.`);
+        // if (!reservation) throw new Error(`Reservation ${reservation_id} does not exist.`);
         if (table.reservation_id) throw new Error(`Table ${table_id} is already occupied.`);
         if (table.capacity < reservation.people) throw new Error(`Table does not have sufficient capacity for the number of people in the reservation.`);
 
@@ -45,7 +48,7 @@ async function unseatTable(table_id) {
         .where({ table_id })
         .first();
     
-    if (!table) throw new Error("Table does not exist.");
+    if (!table) throw new Error(`Table: ${table_id} does not exist.`);
     if (!table.reservation_id) throw new Error("Table is not occupied.");
 
     await knex.transaction(async (trx) => {

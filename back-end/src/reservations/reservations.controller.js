@@ -30,7 +30,9 @@ async function create(req, res, next) {
     if (!/^\d{2}:\d{2}$/.test(req.body.data.reservation_time)) {
         return res.status(400).json({ error: "reservation_time must be a time in the format HH:MM." });
     }
-
+    if (req.body.data.status && ['seated', 'finished'].includes(req.body.data.status)) {
+        return res.status(400).json({ error: `Cannot create a reservation with status ${req.body.data.status}` });
+    }
     const reservationDate = new Date(`${req.body.data.reservation_date}T${req.body.data.reservation_time}`);
     const today = new Date();
     if (reservationDate <= today) {
@@ -64,8 +66,38 @@ async function read(req, res, next) {
     res.status(200).json({ data });
 }
 
+async function updateReservationStatus(req, res, next) {
+    console.log(req.body)
+    try {
+        const { reservation_id } = req.params;
+        const { status } = req.body.data;
+        if (!status) {
+            return res.status(400).json({ error: "status is missing" });
+        }
+
+        const validStatuses = ['booked', 'seated', 'finished'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: `unknown status: ${status}` });
+        }
+
+        const reservation = await service.read(reservation_id);
+        if (reservation.status === 'finished') {
+            return res.status(400).json({ error: "a finished reservation cannot be updated" });
+        }
+
+        const updatedReservation = await service.updateReservationStatus(reservation_id, status);
+        res.status(200).json({ data: updatedReservation });
+    } catch (error) {
+        if (error.message.includes('does not exist')) {
+            return res.status(404).json({ error: error.message });
+        }
+        next(error);
+    }
+}
+
 module.exports = {
     list: asyncErrorBoundary(list),
     create: asyncErrorBoundary(create),
     read: asyncErrorBoundary(read),
+    updateReservationStatus: asyncErrorBoundary(updateReservationStatus),
 };

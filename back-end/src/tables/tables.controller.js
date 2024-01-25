@@ -44,14 +44,38 @@ async function seatTable(req, res, next) {
         return res.status(400).json({ error: "reservation_id is missing." });
     }
 
-    await service.seatTable(table_id, reservation_id);
-    res.status(200).json({ data: { status: 'seated' } });
+    try {
+        await service.seatTable(table_id, reservation_id);
+        res.status(200).json({ data: { status: 'seated' } });
+    } catch (error) {
+        if (error.message.includes('does not exist')) {
+            return res.status(404).json({ error: error.message });
+        } else if (error.message.includes('already seated')) {
+            return res.status(400).json({ error: error.message });
+        } else if (error.message.includes('sufficient capacity') || error.message.includes('already occupied')) {
+            return res.status(400).json({ error: error.message });
+        }
+        return next(error); // pass unhandled errors to the global error handler
+    }
 }
 
+
 async function unseatTable(req, res, next) {
-    await service.unseatTable(req.params.table_id);
-    res.status(200).json({ data: { status: 'finished' } });
+    const { table_id } = req.params;
+
+    try {
+        await service.unseatTable(table_id);
+        res.status(200).json({ data: { status: 'finished' } });
+    } catch (error) {
+        if (error.message.includes('does not exist')) {
+            return res.status(404).json({ error: error.message });
+        } else if (error.message.includes('not occupied')) {
+            return res.status(400).json({ error: error.message });
+        }
+        return next(error); // pass unhandled errors to the global error handler
+    }
 }
+
 module.exports = {
     list: asyncErrorBoundary(list),
     createTable: asyncErrorBoundary(createTable),
