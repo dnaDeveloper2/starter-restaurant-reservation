@@ -2,8 +2,8 @@ const service = require("./reservations.service");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
 async function list(req, res) {
-  const { mobile_number, date } = req.query; // Destructure mobile_number from req.query
-  const data = await service.list(date, mobile_number); // Pass mobile_number to the service
+  const { mobile_number, date } = req.query; 
+  const data = await service.list(date, mobile_number); 
   res.json({ data });
 }
 
@@ -143,7 +143,7 @@ async function updateReservationStatus(req, res, next) {
     if (error.message.includes("does not exist")) {
       return res.status(404).json({ error: error.message });
     }
-    return next(error); // pass unhandled errors to the global error handler
+    return next(error); 
   }
 }
 
@@ -176,7 +176,6 @@ async function update(req, res, next) {
     }
   }
 
-  // Additional validations
   // Validate reservation_date format
   if (!/^\d{4}-\d{2}-\d{2}$/.test(updatedReservationData.reservation_date)) {
     return res.status(400).json({
@@ -224,6 +223,7 @@ async function update(req, res, next) {
   res.status(200).json({ data: updatedReservation });
 }
 
+//Exports with asyncErrorBoundary
 module.exports = {
   list: asyncErrorBoundary(list),
   create: asyncErrorBoundary(create),

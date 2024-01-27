@@ -18,16 +18,23 @@ function EditReservation() {
     const history = useHistory();
     const { reservation_id } = useParams();
 
-    useEffect(loadReservation, [reservation_id]);
-
-    function loadReservation() {
+    useEffect(() => {
         const abortController = new AbortController();
         setReservationError(null);
         readReservation(reservation_id, abortController.signal)
-            .then(setFormData)
+            .then((fetchedReservation) => {
+                // Adjust the reservation_time to remove seconds (if present)
+                const formattedTime = fetchedReservation.reservation_time.split(':').slice(0, 2).join(':');
+                setFormData({
+                    ...fetchedReservation,
+                    reservation_date: fetchedReservation.reservation_date.slice(0, 10), // Adjust the slice as needed to match "YYYY-MM-DD" format
+                    reservation_time: formattedTime, // Maintain the original time format (without seconds)
+                    people: Number(fetchedReservation.people), // Ensure `people` is a number
+                });
+            })
             .catch(setReservationError);
         return () => abortController.abort();
-    }
+    }, [reservation_id]);
 
     const handleChange = ({ target }) => {
         setFormData({
@@ -36,30 +43,20 @@ function EditReservation() {
         });
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
+        const abortController = new AbortController();
         setReservationError(null);
 
-        // Client-side validation
-        const reservationDate = new Date(`${formData.reservation_date}T${formData.reservation_time}`);
-        const today = new Date();
-        if (reservationDate.getDay() === 2) {
-            return setReservationError({ message: "The restaurant is closed on Tuesdays." });
+        try {
+            await updateReservation({ ...formData, reservation_id }, abortController.signal);
+            history.push(`/dashboard?date=${formData.reservation_date}`);
+        } catch (error) {
+            setReservationError(error);
+        } finally {
+            console.log(formData)
+            abortController.abort();
         }
-        if (reservationDate < today) {
-            return setReservationError({ message: "Reservations cannot be in the past." });
-        }
-        if (formData.reservation_time < "10:30" || formData.reservation_time > "21:30") {
-            return setReservationError({ message: "Reservations must be between 10:30 AM and 9:30 PM." });
-        }
-
-        const abortController = new AbortController();
-        updateReservation({ ...formData, reservation_id }, abortController.signal)
-            .then(() => {
-                history.push(`/dashboard?date=${formData.reservation_date}`);
-            })
-            .catch(setReservationError);
-        return () => abortController.abort();
     };
 
     return (
