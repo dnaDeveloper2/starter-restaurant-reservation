@@ -1,9 +1,7 @@
 import React from 'react';
-import { useHistory } from 'react-router-dom';
 import { updateReservationStatus } from '../utils/api'; // Make sure to implement this function in your API file
 
 function ReservationCard({ reservation, loadReservations }) {
-    const history = useHistory();
 
     const handleCancel = async () => {
         if (window.confirm("Do you want to cancel this reservation? This cannot be undone.")) {
