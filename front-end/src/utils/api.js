@@ -122,7 +122,7 @@ export async function seatTable(tableId, reservationId, signal) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ data: { reservation_id: reservationId } }),
+        body: JSON.stringify({ data: { reservation_id: reservationId } }), // Correctly format the request body
         signal,
     };
     return fetchData(url, options);
@@ -160,4 +160,24 @@ export async function setReservationStatus(reservationId, status, signal) {
         signal,
     };
     return fetchData(url, options);
+}
+
+export async function updateReservationStatus(reservationId, statusUpdate, signal) {
+    const url = `${API_BASE_URL}/reservations/${reservationId}/status`;
+    const options = {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: statusUpdate }),
+        signal,
+    };
+
+    const response = await fetch(url, options);
+    if (!response.ok) {
+        const error = await response.json();
+        console.error('Error response:', error);  // Log the error response from the server
+        throw new Error('Network response was not ok.');
+    }
+    return await response.json();
 }

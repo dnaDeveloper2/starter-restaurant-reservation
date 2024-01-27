@@ -1,19 +1,15 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import { updateReservation } from '../utils/api'; // Make sure to implement this function in your API file
+import { updateReservationStatus } from '../utils/api'; // Make sure to implement this function in your API file
 
 function ReservationCard({ reservation, loadReservations }) {
     const history = useHistory();
-
-    const handleEdit = () => {
-        history.push(`/reservations/${reservation.reservation_id}/edit`);
-    };
 
     const handleCancel = async () => {
         if (window.confirm("Do you want to cancel this reservation? This cannot be undone.")) {
             const abortController = new AbortController();
             try {
-                await updateReservation(reservation.reservation_id, 'cancelled', abortController.signal);
+                await updateReservationStatus(reservation.reservation_id, { status: 'cancelled' }, abortController.signal);
                 loadReservations(); // Refresh the reservations list after canceling
             } catch (error) {
                 console.error("Cancellation failed", error);
@@ -32,19 +28,31 @@ function ReservationCard({ reservation, loadReservations }) {
                 <p>Date: {reservation.reservation_date}</p>
                 <p>Time: {reservation.reservation_time}</p>
                 <p>People: {reservation.people}</p>
-                <p>Status: {reservation.status}</p>
+                <p data-reservation-id-status={reservation.reservation_id}>
+                Status: {reservation.status}
+                </p>
             </div>
             <div>
                 {reservation.status === 'booked' && (
-                    <a href={`/reservations/${reservation.reservation_id}/seat`} className="btn btn-primary">
-                        Seat
-                    </a>
+                    <>
+                        <a href={`/reservations/${reservation.reservation_id}/seat`} className="btn btn-primary">
+                            Seat
+                        </a>
+                        <a href={`/reservations/${reservation.reservation_id}/edit`} className="btn btn-secondary">
+                            Edit
+                        </a>
+                        <button
+                            data-reservation-id-cancel={reservation.reservation_id}
+                            onClick={handleCancel}
+                            className="btn btn-danger"
+                        >
+                            Cancel
+                        </button>
+                    </>
                 )}
-                {/* Include other buttons/actions as needed */}
             </div>
         </div>
     );
 }
-
 
 export default ReservationCard;

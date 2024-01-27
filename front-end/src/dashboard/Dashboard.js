@@ -78,7 +78,7 @@ function Dashboard() {
             </div>
             <h2>Reservations for {date}</h2>
             {reservations.map((reservation) => (
-                <ReservationCard key={reservation.reservation_id} reservation={reservation} loadDashboard={() => loadDashboard(date)} />
+                <ReservationCard key={reservation.reservation_id} reservation={reservation} loadReservations={() => loadDashboard(date)} />
             ))}
 
             <h2>Tables</h2>

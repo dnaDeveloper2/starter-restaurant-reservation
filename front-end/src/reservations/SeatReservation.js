@@ -29,13 +29,14 @@ function SeatReservation() {
     event.preventDefault();
     const abortController = new AbortController();
     try {
-      await seatTable(tableId, { data: { reservation_id } }, abortController.signal);
-      history.push('/dashboard');
+        // Make sure to pass reservation_id as an integer, not an object
+        await seatTable(tableId, reservation_id, abortController.signal);
+        history.push('/dashboard');
     } catch (error) {
-      setError(error);
+        setError(error);
     }
     return () => abortController.abort();
-  };
+};
 
   return (
     <div>
