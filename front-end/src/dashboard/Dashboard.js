@@ -1,198 +1,120 @@
-import React, { useEffect, useState } from "react";
-import { listReservations, listTables } from "../utils/api";
-import ErrorAlert from "../layout/ErrorAlert";
+import React, { useState, useEffect } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import { today, next, previous } from "../utils/date-time";
-import "./Dashboard.css";
+import { listReservations, listTables, finishTable } from "../utils/api";
+import ReservationCard from "../reservations/ReservationCard";
+import ErrorAlert from "../layout/ErrorAlert";
+import { previous, next, today } from "../utils/date-time"; // Ensure these utility functions are implemented
 
 function Dashboard() {
-  const location = useLocation();
-  const history = useHistory();
-  const [date, setDate] = useState(today());
-  const [reservations, setReservations] = useState([]);
-  const [tables, setTables] = useState([]);
-  const [dashboardError, setDashboardError] = useState(null);
+    const [reservations, setReservations] = useState([]);
+    const [tables, setTables] = useState([]);
+    const [dashboardError, setDashboardError] = useState(null);
+    const location = useLocation(); // Use useLocation hook to access the URL query
+    const query = new URLSearchParams(location.search);
+    const dateFromURL = query.get("date"); // Get date from URL query
+    const [date, setDate] = useState(dateFromURL || today()); // Use date from URL or default to today
+    const history = useHistory();
 
-  useEffect(() => {
-    loadDashboard();
-  }, [date]);
+    useEffect(() => {
+        loadDashboard(date);
+    }, [date, location]); // Also re-run effect if location changes
 
-  const handleFinishTable = (tableId) => {
-    const confirmFinish = window.confirm("Is this table ready to seat new guests? This cannot be undone.");
-  
-    if (confirmFinish) {
-      finishTable(tableId);
+    function loadDashboard(date) {
+        const abortController = new AbortController();
+        setDashboardError(null);
+        
+        listReservations({ date }, abortController.signal)
+            .then(setReservations)
+            .catch(setDashboardError);
+        
+        listTables(abortController.signal)
+            .then(setTables)
+            .catch(setDashboardError);
+        
+        return () => abortController.abort();
     }
-  };
-  
-  const finishTable = async (tableId) => {
-    const API_BASE_URL = "http://localhost:5001";
-    try {
-      // Confirm with the user before finishing the table
-      if (window.confirm("Are you sure you want to free up this table?")) {
-        // Send DELETE request to free up the table
-        const response = await fetch(`${API_BASE_URL}/tables/${tableId}/seat`, {
-          method: 'DELETE',
-        });
-  
-        if (!response.ok) {
-          // If the response is not OK, throw an error with the response's status text
-          throw new Error(`Error: ${response.statusText}`);
+
+    const handleFinish = async (tableId) => {
+        if (window.confirm("Is this table ready to seat new guests? This cannot be undone.")) {
+            const abortController = new AbortController();
+            try {
+                await finishTable(tableId, abortController.signal);
+                loadDashboard(date); // Refresh the dashboard after freeing up the table
+            } catch (error) {
+                setDashboardError(error);
+            }
+            return () => abortController.abort();
         }
-  
-        // Refresh the list of tables and reservations after finishing the table
-        loadDashboard();
-      }
-    } catch (error) {
-      console.error(error.message || 'Failed to finish table');
-      // Optionally, you can set an error state here and display it to the user
-    }
-  };
+    };
 
-  async function loadDashboard() {
-    try {
-      const reservationsData = await listReservations({ date });
-      setReservations(reservationsData);
+    // Event handlers for date navigation buttons
+    const handlePreviousDay = () => {
+        const newDate = previous(date);
+        setDate(newDate);
+        history.push(`/dashboard?date=${newDate}`);
+    };
 
-      const tablesData = await listTables();
-      setTables(tablesData);
-    } catch (error) {
-      setDashboardError(error.message || "Failed to fetch data");
-    }
-  }
+    const handleNextDay = () => {
+        const newDate = next(date);
+        setDate(newDate);
+        history.push(`/dashboard?date=${newDate}`);
+    };
 
-  const handleDateChange = (event) => {
-    const newDate = event.target.value;
-    setDate(newDate);
-  };
+    const handleToday = () => {
+        const newDate = today();
+        setDate(newDate);
+        history.push(`/dashboard?date=${newDate}`);
+    };
 
-  const handleNextDay = () => {
-    const nextDay = next(date);
-    setDate(nextDay);
-  };
-
-  const handlePrevDay = () => {
-    const prevDay = previous(date);
-    setDate(prevDay);
-  };
-
-  const handleToday = () => {
-    const todayDate = today();
-    setDate(todayDate);
-  };
-
-  const getTableStatus = (tableId) => {
-    // Find the table by its ID
-    const table = tables.find((table) => table.table_id === tableId);
-  
-    // Check if the table has a reservation_id associated with it
-    return table && table.reservation_id ? "Occupied" : "Free";
-  };
-
-  return (
-    <main>
-      <h1>Dashboard</h1>
-      <div className="d-md-flex mb-3">
-        <label htmlFor="date">Select Date:</label>
-        <input
-          type="date"
-          id="date"
-          name="date"
-          value={date}
-          onChange={handleDateChange}
-        />
-        <button onClick={handlePrevDay}>Previous</button>
-        <button onClick={handleToday}>Today</button>
-        <button onClick={handleNextDay}>Next</button>
-      </div>
-      <ErrorAlert error={dashboardError} />
-
-      <div className="dashboard-grid">
-        <div className="dashboard-tables">
-          <h2>Tables</h2>
-          <ul className="dashboard-tables-scrollable">
-            {tables
-              .sort((a, b) => a.table_name.localeCompare(b.table_name))
-              .map((table) => {
-                
-                const tableStatus = getTableStatus(table.table_id);
-                const isOccupied = tableStatus === "Occupied"
-                return (
-                  <li
-                    key={table.table_id}
-                    className={`dashboard-table ${
-                      isOccupied ? "occupied" : "free"
-                    }`}
-                  >
-                    <strong>Table ID:</strong> {table.table_id}
-                    <br />
-                    <strong>Table Name:</strong> {table.table_name}
-                    <br />
-                    <strong>Capacity:</strong> {table.capacity}
-                    <br />
-                    <strong>Status:</strong>{" "}
-                    <span data-table-id-status={table.table_id}>
-                      {tableStatus}
-                    </span> <br />
-                    {isOccupied && (
-                      <>
-                        <button
-                        className="finish-button"
-                          data-table-id-finish={table.table_id}
-                          onClick={() => handleFinishTable(table.table_id)}
-                        >
-                          Finish
-                        </button>
-                        <hr />
-                      </>
-                    )}
-                  </li>
-                );
-              })}
-          </ul>
-        </div>
-         {/* Filter out finished reservations */}
-         {reservations.filter(reservation => reservation.status !== 'finished').length > 0 ? (
-          <div className="dashboard-reservations">
-            <h2>Reservations</h2>
-            <div className="reservations-scrollable">
-              <ul>
-              {reservations
-                  .filter(reservation => reservation.status !== 'finished') // Filter out finished reservations
-                  .map((reservation) => (
-                  <li key={reservation.reservation_id}>
-                    <br />
-                    <strong>Name:</strong> {reservation.first_name}{" "}
-                    {reservation.last_name}
-                    <br />
-                    <strong>Mobile Number:</strong> {reservation.mobile_number}
-                    <br />
-                    <strong>Date:</strong> {reservation.reservation_date}
-                    <br />
-                    <strong>Time:</strong> {reservation.reservation_time}
-                    <br />
-                    <strong>People:</strong> {reservation.people}
-                    <br />
-                    <strong>Created At:</strong> {reservation.created_at}
-                    <br />
-                    <strong>Updated At:</strong> {reservation.updated_at}
-                    <br />
-                 {/* Only show the Seat button for 'booked' reservations */}
-                 {reservation.status === 'booked' && (
-                      <a href={`/reservations/${reservation.reservation_id}/seat`}>Seat</a>
-                    )}
-                    <hr />
-                  </li>
-                ))}
-              </ul>
+    return (
+        <main>
+            <h1>Dashboard</h1>
+            <ErrorAlert error={dashboardError} />
+            
+            <div className="date-navigation">
+                <button onClick={handlePreviousDay}>Previous</button>
+                <button onClick={handleToday}>Today</button>
+                <button onClick={handleNextDay}>Next</button>
             </div>
-          </div>
-        ) : (
-          <p>No reservations found for the selected date.</p>
-        )}
-      </div>
-    </main>
-  );
+            <h2>Reservations for {date}</h2>
+            {reservations.map((reservation) => (
+                <ReservationCard key={reservation.reservation_id} reservation={reservation} loadDashboard={() => loadDashboard(date)} />
+            ))}
+
+            <h2>Tables</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Capacity</th>
+                        <th>Status</th>
+                        <th>Finish</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {tables.map((table) => (
+                        <tr key={table.table_id}>
+                            <td>{table.table_name}</td>
+                            <td>{table.capacity}</td>
+                            <td data-table-id-status={table.table_id}>
+                                {table.reservation_id ? 'Occupied' : 'Free'}
+                            </td>
+                            <td>
+                                {table.reservation_id && (
+                                    <button
+                                        data-table-id-finish={table.table_id}
+                                        onClick={() => handleFinish(table.table_id)}
+                                    >
+                                        Finish
+                                    </button>
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </main>
+    );
 }
 
 export default Dashboard;

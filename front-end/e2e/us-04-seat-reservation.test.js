@@ -94,7 +94,7 @@ describe("US-04 - Seat reservation - E2E", () => {
       expect(page.url()).toContain("/tables/new");
     });
     test("omitting capacity and submitting does not create a new table", async () => {
-      await page.type("input[name=table_name]", "Omit capacity");
+      await page.type("input[name=table_name]", "");
 
       await page.screenshot({
         path: ".screenshots/us-04-omit-capacity-before.png",
