@@ -4,6 +4,7 @@ import { listReservations, listTables, finishTable } from "../utils/api";
 import ReservationCard from "../reservations/ReservationCard";
 import ErrorAlert from "../layout/ErrorAlert";
 import { previous, next, today } from "../utils/date-time"; // Ensure these utility functions are implemented
+import './Dashboard.css'
 
 function Dashboard() {
     const [reservations, setReservations] = useState([]);
@@ -68,53 +69,56 @@ function Dashboard() {
 
     return (
         <main>
-            <h1>Dashboard</h1>
-            <ErrorAlert error={dashboardError} />
-            
-            <div className="date-navigation">
-                <button onClick={handlePreviousDay}>Previous</button>
-                <button onClick={handleToday}>Today</button>
-                <button onClick={handleNextDay}>Next</button>
-            </div>
-            <h2>Reservations for {date}</h2>
-            {reservations.map((reservation) => (
-                <ReservationCard key={reservation.reservation_id} reservation={reservation} loadReservations={() => loadDashboard(date)} />
-            ))}
+          <h1>Dashboard</h1>
+          <ErrorAlert error={dashboardError} />
+          <div className="d-md-flex mb-3">
+            <button onClick={handlePreviousDay}>Previous</button>
+            <button onClick={handleToday}>Today</button>
+            <button onClick={handleNextDay}>Next</button>
+          </div>
+          <div className="dashboard-grid">
 
-            <h2>Tables</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Capacity</th>
-                        <th>Status</th>
-                        <th>Finish</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {tables.map((table) => (
-                        <tr key={table.table_id}>
-                            <td>{table.table_name}</td>
-                            <td>{table.capacity}</td>
-                            <td data-table-id-status={table.table_id}>
-                                {table.reservation_id ? 'Occupied' : 'Free'}
-                            </td>
-                            <td>
-                                {table.reservation_id && (
-                                    <button
-                                        data-table-id-finish={table.table_id}
-                                        onClick={() => handleFinish(table.table_id)}
-                                    >
-                                        Finish
-                                    </button>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </main>
-    );
+         <div>
+        <h2>Reservations for {date}</h2>
+        <div className="reservations-scrollable">
+          {reservations.map((reservation) => (
+            <ReservationCard key={reservation.reservation_id} reservation={reservation} loadReservations={() => loadDashboard(date)} />
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2>Tables</h2>
+        <div className="dashboard-tables">
+          <ul className="dashboard-tables-scrollable">
+            {tables.map((table) => (
+              <li key={table.table_id} className={`dashboard-table ${table.reservation_id ? "occupied" : "free"}`}>
+                  <strong>Table Name:</strong> {table.table_name}
+                  <br />
+                  <strong>Capacity:</strong> {table.capacity}
+                  <br />
+                  <strong>Status:</strong>{" "}
+                  <span data-table-id-status={table.table_id}>
+                    {table.reservation_id ? 'Occupied' : 'Free'}
+                  </span>
+                  <br />
+                  {table.reservation_id && (
+                  <button
+                    className="finish-button"
+                    data-table-id-finish={table.table_id}
+                    onClick={() => handleFinish(table.table_id)}
+                  >
+                    Finish
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </main>
+);
 }
 
 export default Dashboard;

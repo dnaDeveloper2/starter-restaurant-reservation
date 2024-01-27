@@ -1,0 +1,53 @@
+/* Style for the tables section */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns for tables and reservations */
+    gap: 20px; /* Adjust the gap based on your preference */
+    
+  }
+  
+  /* Style for each table item */
+  .dashboard-table {
+    border-bottom: 1px solid #ccc; /* Bottom border */
+    padding: 16px; /* Adjust the padding as needed */
+    
+  }
+  .dashboard-tables-scrollable {
+  
+    max-height: 500px; /* Adjust the max-height based on your preference */
+    overflow-y: auto;
+  
+  }
+  /* Style for occupied tables */
+  .dashboard-table.occupied {
+    height: 150px;
+    width: 200px;
+    background: #00558a;
+    border-radius: 5px;
+    position: relative;
+    &:after {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      content: "\274c";
+      font-size: 100px;
+      color: rgba(255, 0, 0, 0.3);
+      line-height: 150px;
+      text-align: center;
+      /* background-color: #ffe0e0;  */
+    }
+  }
+  
+  /* Style for the "Finish" button */
+  button.finish-button {
+    margin: 0px 200px; /* Adjust the margin as needed */
+  
+  }
+  
+  .reservations-scrollable {
+    max-height: 500px; /* Adjust the max-height based on your preference */
+    overflow-y: auto;
+  }
+  

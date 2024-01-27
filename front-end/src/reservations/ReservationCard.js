@@ -18,6 +18,12 @@ function ReservationCard({ reservation, loadReservations }) {
         }
     };
 
+    const formattedDate = new Date(reservation.reservation_date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
+
     return (
         <div className="reservation-card">
             <div>
@@ -25,7 +31,7 @@ function ReservationCard({ reservation, loadReservations }) {
             </div>
             <div>
                 <p>Mobile Number: {reservation.mobile_number}</p>
-                <p>Date: {reservation.reservation_date}</p>
+                <p>Date: {formattedDate}</p> {/* Use the formatted date */}
                 <p>Time: {reservation.reservation_time}</p>
                 <p>People: {reservation.people}</p>
                 <p data-reservation-id-status={reservation.reservation_id}>

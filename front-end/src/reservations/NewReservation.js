@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ErrorAlert from '../layout/ErrorAlert';
 import { createReservation } from '../utils/api';
+import "./NewReservation.css"
 
 function NewReservation() {
   const initialFormState = {
@@ -55,21 +56,22 @@ function NewReservation() {
 };
 
   return (
-      <div>
-          <h1>Create Reservation</h1>
-          <ErrorAlert error={reservationsError} />
-          <form onSubmit={handleSubmit}>
-              <div>
-                  <label htmlFor="first_name">First Name:</label>
-                  <input
-                      id="first_name"
-                      name="first_name"
-                      type="text"
-                      onChange={handleChange}
-                      value={formData.first_name}
-                      required
-                  />
-              </div>
+    <div className="reservation-form-container">
+    <h1>Create Reservation</h1>
+    <ErrorAlert error={reservationsError} />
+    <form onSubmit={handleSubmit} className="reservation-form">
+        <div>
+            <label htmlFor="first_name">First Name:</label>
+            <input
+                id="first_name"
+                name="first_name"
+                type="text"
+                onChange={handleChange}
+                value={formData.first_name}
+                required
+                className="reservation-input"
+            />
+        </div>
               <div>
                   <label htmlFor="last_name">Last Name:</label>
                   <input
@@ -126,11 +128,13 @@ function NewReservation() {
                       required
                   />
               </div>
-              <button type="submit">Submit</button>
-              <button type="button" onClick={() => history.goBack()}>Cancel</button>
-          </form>
-      </div>
-  );
+              <div className="form-actions">
+                <button type="submit" className="submit-button">Submit</button>
+                <button type="button" onClick={() => history.goBack()} className="cancel-button">Cancel</button>
+            </div>
+        </form>
+    </div>
+);
 }
 
 export default NewReservation;
