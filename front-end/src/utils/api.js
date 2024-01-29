@@ -120,7 +120,7 @@ export async function seatTable(tableId, reservationId, signal) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ data: { reservation_id: reservationId } }), // Correctly format the request body
+        body: JSON.stringify({ data: { reservation_id: reservationId } }), 
         signal,
     };
     return fetchData(url, options);
@@ -160,6 +160,7 @@ export async function setReservationStatus(reservationId, status, signal) {
     return fetchData(url, options);
 }
 
+// Update the reservation status
 export async function updateReservationStatus(reservationId, statusUpdate, signal) {
     const url = `${API_BASE_URL}/reservations/${reservationId}/status`;
     const options = {
@@ -174,7 +175,7 @@ export async function updateReservationStatus(reservationId, statusUpdate, signa
     const response = await fetch(url, options);
     if (!response.ok) {
         const error = await response.json();
-        console.error('Error response:', error);  // Log the error response from the server
+        console.error('Error response:', error);  
         throw new Error('Network response was not ok.');
     }
     return await response.json();

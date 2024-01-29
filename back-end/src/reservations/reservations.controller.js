@@ -1,11 +1,16 @@
 const service = require("./reservations.service");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
+
+// Retrieves a list of reservations based on provided query parameters.
+
 async function list(req, res) {
-  const { mobile_number, date } = req.query; 
-  const data = await service.list(date, mobile_number); 
+  const { mobile_number, date } = req.query;
+  const data = await service.list(date, mobile_number);
   res.json({ data });
 }
+
+// Creates a new reservation after validating the required fields and constraints.
 
 async function create(req, res, next) {
   if (!req.body.data)
@@ -89,6 +94,9 @@ async function create(req, res, next) {
   const data = await service.create(req.body.data);
   res.status(201).json({ data });
 }
+
+// Retrieves a single reservation by ID.
+
 async function read(req, res, next) {
   const data = await service.read(req.params.reservation_id);
   if (!data) {
@@ -98,6 +106,8 @@ async function read(req, res, next) {
   }
   res.status(200).json({ data });
 }
+
+// Updates the status of an existing reservation.
 
 async function updateReservationStatus(req, res, next) {
   const { reservation_id } = req.params;
@@ -143,9 +153,11 @@ async function updateReservationStatus(req, res, next) {
     if (error.message.includes("does not exist")) {
       return res.status(404).json({ error: error.message });
     }
-    return next(error); 
+    return next(error);
   }
 }
+
+// Updates an existing reservation's details.
 
 async function update(req, res, next) {
   const { reservation_id } = req.params;

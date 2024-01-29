@@ -7,7 +7,7 @@
   .reservation-form {
     display: flex;
     flex-direction: column;
-    align-items: flex-end; /* Align items to the right */
+    align-items: flex-end; 
   }
   
   .reservation-form label {
@@ -51,11 +51,11 @@
   /* Media query for desktop mode */
   @media (min-width: 768px) {
     .reservation-form-container {
-      margin:10px; /* Center the form in desktop mode */
+      margin:10px; 
     }
   
     .reservation-form {
-      align-items: flex-start; /* Align items to the left in desktop mode */
+      align-items: flex-start; 
     }
   }
   

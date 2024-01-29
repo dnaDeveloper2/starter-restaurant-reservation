@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useHistory } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useParams, useHistory } from "react-router-dom";
 import ErrorAlert from "../layout/ErrorAlert";
 import { listTables, seatTable } from "../utils/api";
 
@@ -7,7 +7,7 @@ function SeatReservation() {
   const { reservation_id } = useParams();
   const history = useHistory();
   const [tables, setTables] = useState([]);
-  const [tableId, setTableId] = useState('');
+  const [tableId, setTableId] = useState("");
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -16,27 +16,30 @@ function SeatReservation() {
     return () => abortController.abort();
   }, []);
 
+  // Function to load available tables
+
   const loadTables = async (signal) => {
     try {
       const response = await listTables(signal);
-      setTables(response); // Set the state directly with the response
+      setTables(response);
     } catch (error) {
       setError(error);
     }
   };
+  // Function to handle form submission
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const abortController = new AbortController();
     try {
-        // Make sure to pass reservation_id as an integer, not an object
-        await seatTable(tableId, reservation_id, abortController.signal);
-        history.push('/dashboard');
+      await seatTable(tableId, reservation_id, abortController.signal);
+      history.push("/dashboard");
     } catch (error) {
-        setError(error);
+      setError(error);
     }
     return () => abortController.abort();
-};
+  };
+  // Render the form for seating a reservation
 
   return (
     <div>
@@ -52,7 +55,7 @@ function SeatReservation() {
           value={tableId}
           required
         >
-          <option value="">Select a table</option> 
+          <option value="">Select a table</option>
           {tables.map((table) => (
             <option key={table.table_id} value={table.table_id}>
               {table.table_name} - {table.capacity}

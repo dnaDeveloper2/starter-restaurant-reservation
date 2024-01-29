@@ -1,24 +1,30 @@
-/* Style for the tables section */
+/* Styles a grid container for the dashboard, splitting it into two columns with a gap in between */
+
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Two columns for tables and reservations */
-    gap: 20px; /* Adjust the gap based on your preference */
+    grid-template-columns: 1fr 1fr; 
+    gap: 20px; 
     
   }
   
-  /* Style for each table item */
+  /* Styles the base appearance for tables on the dashboard */
+
   .dashboard-table {
-    border-bottom: 1px solid #ccc; /* Bottom border */
-    padding: 16px; /* Adjust the padding as needed */
+    border-bottom: 1px solid #ccc; 
+    padding: 16px; 
     
   }
+  /* Makes a scrollable container for tables on the dashboard */
+
   .dashboard-tables-scrollable {
   
-    max-height: 500px; /* Adjust the max-height based on your preference */
+    max-height: 500px; 
     overflow-y: auto;
   
   }
-  /* Style for occupied tables */
+  
+  /* Styles an occupied table with distinct appearance. Places an "X" over the reservation when it is occupied */
+
   .dashboard-table.occupied {
     height: 150px;
     width: 200px;
@@ -36,18 +42,21 @@
       color: rgba(255, 0, 0, 0.3);
       line-height: 150px;
       text-align: center;
-      /* background-color: #ffe0e0;  */
+      
     }
   }
   
-  /* Style for the "Finish" button */
+  /* Styles a button used to free up a table */
+
   button.finish-button {
-    margin: 0px 200px; /* Adjust the margin as needed */
+    margin: 0px 200px; 
   
   }
   
+  /* Styles a scrollable container for reservations */
+
   .reservations-scrollable {
-    max-height: 500px; /* Adjust the max-height based on your preference */
+    max-height: 500px; 
     overflow-y: auto;
   }
   
